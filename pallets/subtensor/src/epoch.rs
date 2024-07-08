@@ -341,14 +341,11 @@ impl<T: Config> Pallet<T> {
     ///  * 'netuid': ( u16 ):
     ///     - The network to distribute the emission onto.
     ///
-    ///  * 'rao_emission': ( u64 ):
-    ///     - The total emission for the epoch.
-    ///
     ///  * 'debug' ( bool ):
     ///     - Print debugging outputs.
     ///
     #[allow(clippy::indexing_slicing)]
-    pub fn epoch(netuid: u16, rao_emission: u64) -> Vec<(T::AccountId, u64, u64)> {
+    pub fn epoch(netuid: u16) -> Option<Vec<(T::AccountId, u64, u64)>> {
         // Get subnetwork size.
         let n: u16 = Self::get_subnetwork_n(netuid);
         log::trace!("Number of Neurons in Network: {:?}", n);
@@ -578,6 +575,8 @@ impl<T: Config> Pallet<T> {
         }
 
         // Compute rao based emission scores. range: I96F32(0, rao_emission)
+        // TODO 2024-07-08: temp consider it 1_000_000_000 until calling getter for it.
+        let rao_emission: u64 = 1_000_000_000;
         let float_rao_emission: I96F32 = I96F32::from_num(rao_emission);
 
         let server_emission: Vec<I96F32> = normalized_server_emission
