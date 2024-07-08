@@ -4,6 +4,12 @@ use frame_support::IterableStorageDoubleMap;
 use sp_std::vec;
 use substrate_fixed::types::{I32F32, I64F64, I96F32};
 
+// Define the enum in the module scope
+pub enum EmissionResult<T: Config> {
+    Incentive(Vec<I32F32>),
+    NonIncentive(Vec<(T::AccountId, u64, u64)>),
+}
+
 impl<T: Config> Pallet<T> {
     /// Calculates reward consensus and returns the emissions for uids/hotkeys in a given `netuid`.
     /// (Dense version used only for testing purposes.)
@@ -345,7 +351,7 @@ impl<T: Config> Pallet<T> {
     ///     - Print debugging outputs.
     ///
     #[allow(clippy::indexing_slicing)]
-    pub fn epoch(netuid: u16) -> Option<Vec<(T::AccountId, u64, u64)>> {
+    pub fn epoch(netuid: u16, is_incentive: Option<bool>) -> EmissionResult<T> {
         // Get subnetwork size.
         let n: u16 = Self::get_subnetwork_n(netuid);
         log::trace!("Number of Neurons in Network: {:?}", n);
@@ -689,17 +695,23 @@ impl<T: Config> Pallet<T> {
                 }
             });
 
-        // Emission tuples ( hotkeys, server_emission, validator_emission )
-        hotkeys
-            .into_iter()
-            .map(|(uid_i, hotkey)| {
-                (
-                    hotkey,
-                    server_emission[uid_i as usize],
-                    validator_emission[uid_i as usize],
-                )
-            })
-            .collect()
+        match is_incentive {
+            None | Some(false) => {
+                // Emission tuples ( hotkeys, server_emission, validator_emission )
+                let non_incentive = hotkeys
+                    .into_iter()
+                    .map(|(uid_i, hotkey)| {
+                        (
+                            hotkey,
+                            server_emission[uid_i as usize],
+                            validator_emission[uid_i as usize],
+                        )
+                    })
+                    .collect();
+                EmissionResult::NonIncentive(non_incentive)
+            }
+            Some(true) => EmissionResult::Incentive(incentive),
+        }
     }
 
     pub fn get_float_rho(netuid: u16) -> I32F32 {
