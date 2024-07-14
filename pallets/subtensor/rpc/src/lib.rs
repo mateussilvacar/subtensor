@@ -13,13 +13,13 @@ use sp_api::ProvideRuntimeApi;
 
 pub use subtensor_custom_rpc_runtime_api::{
     DelegateInfoRuntimeApi, NeuronInfoRuntimeApi, SubnetInfoRuntimeApi,
-    SubnetRegistrationRuntimeApi,
+    SubnetRegistrationRuntimeApi, SubtensorEpochRuntimeApi,
 };
 
 #[rpc(client, server)]
 pub trait SubtensorCustomApi<BlockHash> {
     #[method(name = "subtensor_epoch")]
-    fn epoch(&self, netuid: u16, at: Option<BlockHash>) -> RpcResult<Vec<u8>>;
+    fn epoch(&self, netuid: u16, is_incentive: bool, at: Option<BlockHash>) -> RpcResult<Vec<u8>>;
 
     #[method(name = "delegateInfo_getDelegates")]
     fn get_delegates(&self, at: Option<BlockHash>) -> RpcResult<Vec<u8>>;
@@ -102,6 +102,7 @@ where
     C::Api: NeuronInfoRuntimeApi<Block>,
     C::Api: SubnetInfoRuntimeApi<Block>,
     C::Api: SubnetRegistrationRuntimeApi<Block>,
+    C::Api: SubtensorEpochRuntimeApi<Block>,
 {
     fn get_delegates(&self, at: Option<<Block as BlockT>::Hash>) -> RpcResult<Vec<u8>> {
         let api = self.client.runtime_api();
@@ -230,12 +231,13 @@ where
     fn epoch(
         &self,
         netuid: u16,
+        is_incentive: bool,
         at: Option<<Block as BlockT>::Hash>,
     ) -> RpcResult<Vec<u8>> {
         let api = self.client.runtime_api();
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-        api.epoch(at, netuid).map_err(|e| {
+        api.epoch(at, netuid, is_incentive).map_err(|e| {
             Error::RuntimeError(format!("Unable to get subtensor epoch: {:?}", e)).into()
         })
     }

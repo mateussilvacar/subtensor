@@ -42,6 +42,7 @@ use sp_std::prelude::*;
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
+use pallet_subtensor::epoch;
 
 // A few exports that help ease life for downstream crates.
 pub use frame_support::{
@@ -1679,9 +1680,13 @@ impl_runtime_apis! {
     }
 
     impl subtensor_custom_rpc_runtime_api::SubtensorEpochRuntimeApi<Block> for Runtime {
-        fn epoch(netuid: u16) -> Vec<u8> {
-            // let result = epoch(netuid);
-            todo!()
+        fn epoch(netuid: u16, is_incentive: bool) -> Vec<u8> {
+            let data = SubtensorModule::epoch(netuid, Some(is_incentive));
+            match data {
+                epoch::EmissionResult::NonIncentive(data) => return data.encode(),
+                epoch::EmissionResult::Incentive(data) => return data.encode()
+            }
+
         }
     }
 

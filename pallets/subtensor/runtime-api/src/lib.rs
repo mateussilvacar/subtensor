@@ -34,6 +34,6 @@ sp_api::decl_runtime_apis! {
     }
 
     pub trait SubtensorEpochRuntimeApi {
-        fn epoch(netuid: u16) -> Vec<u8>;
+        fn epoch(netuid: u16, is_incentive: bool) -> Vec<u8>;
     }
 }
