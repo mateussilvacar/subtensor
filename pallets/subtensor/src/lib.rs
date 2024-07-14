@@ -35,7 +35,7 @@ mod benchmarks;
 //	==== Pallet Imports =====
 // =========================
 mod block_step;
-mod epoch;
+pub mod epoch;
 mod errors;
 mod events;
 pub mod math;
